@@ -82,7 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           requires_otp: true,
           masked_email: res.masked_email,
           email: res.email,
-          cooldown_seconds: res.cooldown_seconds || 60
+          message: res.message,
+          cooldown_seconds: res.cooldown_seconds || 60,
+          dev_otp: (res as any).dev_otp
         };
       }
       return { success: false, error: 'Unexpected login response.' };
@@ -110,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.auth.resendLoginOtp(email.trim());
       if (res.success) {
-        return { success: true, message: res.message, cooldown_seconds: res.cooldown_seconds };
+        return { success: true, message: res.message, cooldown_seconds: res.cooldown_seconds, dev_otp: (res as any).dev_otp };
       }
       return { success: false, error: 'Could not resend OTP.' };
     } catch (err: any) {
@@ -137,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.auth.resendSignupOtp(email.trim());
       if (res.success) {
-        return { success: true, message: res.message, cooldown_seconds: res.cooldown_seconds };
+        return { success: true, message: res.message, cooldown_seconds: res.cooldown_seconds, dev_otp: (res as any).dev_otp };
       }
       return { success: false, error: 'Could not resend verification code.' };
     } catch (err: any) {
@@ -192,7 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: res.email,
           masked_email: res.masked_email,
           cooldown_seconds: res.cooldown_seconds,
-          doctor_code: res.doctor_code
+          doctor_code: res.doctor_code,
+          dev_otp: (res as any).dev_otp
         };
       }
       return { success: false, error: 'Registration failed.' };

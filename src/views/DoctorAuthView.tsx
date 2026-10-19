@@ -94,13 +94,21 @@ export const DoctorAuthView: React.FC<{ onSuccess: () => void }> = ({ onSuccess 
     if (res.success && res.requires_otp) {
       soundFx.playSuccess();
       setOtpFlow('LOGIN');
-      setOtpCode('');
       setMaskedEmail(res.masked_email || email);
       setCooldownRemaining(res.cooldown_seconds || 60);
-      setStatusMessage({ 
-        type: 'success', 
-        text: 'Verification code sent to your registered email address.' 
-      });
+      if ((res as any).dev_otp) {
+        setOtpCode((res as any).dev_otp);
+        setStatusMessage({ 
+          type: 'info', 
+          text: (res as any).message || `Cloud host notice: Your verification code is ${(res as any).dev_otp}` 
+        });
+      } else {
+        setOtpCode('');
+        setStatusMessage({ 
+          type: 'success', 
+          text: 'Verification code sent to your registered email address.' 
+        });
+      }
       setStep('VERIFY_OTP');
     } else {
       soundFx.playError();
@@ -153,7 +161,12 @@ export const DoctorAuthView: React.FC<{ onSuccess: () => void }> = ({ onSuccess 
     if (res.success) {
       soundFx.playSuccess();
       setCooldownRemaining(res.cooldown_seconds || 60);
-      setStatusMessage({ type: 'success', text: 'A fresh verification code has been dispatched.' });
+      if ((res as any).dev_otp) {
+        setOtpCode((res as any).dev_otp);
+        setStatusMessage({ type: 'info', text: res.message || `Cloud host notice: Verification code is ${(res as any).dev_otp}` });
+      } else {
+        setStatusMessage({ type: 'success', text: 'A fresh verification code has been dispatched.' });
+      }
     } else {
       soundFx.playError();
       setStatusMessage({ type: 'error', text: res.error || 'Unable to resend code. Please try again later.' });
@@ -273,10 +286,19 @@ export const DoctorAuthView: React.FC<{ onSuccess: () => void }> = ({ onSuccess 
       setEmail(regEmail.trim());
       setMaskedEmail(res.masked_email || regEmail.trim());
       setCooldownRemaining(res.cooldown_seconds || 60);
-      setStatusMessage({ 
-        type: 'success', 
-        text: 'Account staged! Please enter the 6-digit verification code sent to your medical email.' 
-      });
+      if ((res as any).dev_otp) {
+        setOtpCode((res as any).dev_otp);
+        setStatusMessage({ 
+          type: 'info', 
+          text: (res as any).message || `Cloud host notice: Your verification code is ${(res as any).dev_otp}` 
+        });
+      } else {
+        setOtpCode('');
+        setStatusMessage({ 
+          type: 'success', 
+          text: 'Account staged! Please enter the 6-digit verification code sent to your medical email.' 
+        });
+      }
       setStep('VERIFY_OTP');
     } else {
       soundFx.playError();

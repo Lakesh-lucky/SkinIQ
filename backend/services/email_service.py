@@ -76,9 +76,9 @@ def send_email(
 
         # Connect and authenticate with STARTTLS on port 587 (or SSL on port 465)
         if port == 465:
-            server = smtplib.SMTP_SSL(host, port, timeout=20)
+            server = smtplib.SMTP_SSL(host, port, timeout=5)
         else:
-            server = smtplib.SMTP(host, port, timeout=20)
+            server = smtplib.SMTP(host, port, timeout=5)
             server.ehlo()
             server.starttls()
             server.ehlo()

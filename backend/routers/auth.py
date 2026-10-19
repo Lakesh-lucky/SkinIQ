@@ -171,18 +171,11 @@ def doctor_login_step1(req: UserLoginRequest, db: Session = Depends(get_db)):
         otp_code=plain_otp
     )
     if not sent:
-        log_audit_event(db, action="OTP_SEND_FALLBACK", user_id=user.id, user_email=user.email, status="FALLBACK", details=send_err)
-        print(f"[Cloud Host Notice] Outbound SMTP blocked ({send_err}). Login OTP for {user.email}: {plain_otp}")
-        masked = mask_email(user.email)
-        return {
-            "success": True,
-            "requires_otp": True,
-            "message": f"Cloud Host Notice: Email blocked by host network. Verification code: {plain_otp}",
-            "masked_email": masked,
-            "email": user.email,
-            "cooldown_seconds": settings.OTP_RESEND_COOLDOWN,
-            "dev_otp": plain_otp
-        }
+        log_audit_event(db, action="OTP_SEND_FAILED", user_id=user.id, user_email=user.email, status="FAILED", details=send_err)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unable to send verification email: {send_err}"
+        )
 
     log_audit_event(db, action="LOGIN_OTP_DISPATCHED", user_id=user.id, user_email=user.email, user_role=user.role)
 
@@ -260,15 +253,7 @@ def resend_doctor_login_otp(req: DoctorResendOtpRequest, db: Session = Depends(g
         otp_code=plain_otp
     )
     if not sent:
-        print(f"[Cloud Host Notice] Resend Login OTP for {user.email}: {plain_otp}")
-        masked = mask_email(user.email)
-        return {
-            "success": True,
-            "message": f"Cloud Host Notice: Email blocked by host network. Verification code: {plain_otp}",
-            "masked_email": masked,
-            "cooldown_seconds": settings.OTP_RESEND_COOLDOWN,
-            "dev_otp": plain_otp
-        }
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unable to send verification email: {send_err}")
 
     masked = mask_email(user.email)
     return {
@@ -359,19 +344,11 @@ def doctor_self_registration(req: DoctorRegisterRequest, db: Session = Depends(g
         otp_code=plain_otp
     )
     if not sent:
-        log_audit_event(db, action="SIGNUP_OTP_FALLBACK", user_id=user.id, user_email=user.email, status="FALLBACK", details=send_err)
-        print(f"[Cloud Host Notice] Outbound SMTP blocked ({send_err}). Signup OTP for {user.email}: {plain_otp}")
-        masked = mask_email(user.email)
-        return {
-            "success": True,
-            "requires_otp": True,
-            "message": f"Cloud Host Notice: Email blocked by host network. Verification code: {plain_otp}",
-            "email": user.email,
-            "masked_email": masked,
-            "cooldown_seconds": settings.OTP_RESEND_COOLDOWN,
-            "doctor_code": doctor_code,
-            "dev_otp": plain_otp
-        }
+        log_audit_event(db, action="SIGNUP_OTP_SEND_FAILED", user_id=user.id, user_email=user.email, status="FAILED", details=send_err)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unable to send registration verification email: {send_err}"
+        )
 
     log_audit_event(db, action="USER_REGISTERED_PENDING_OTP", user_id=user.id, user_email=user.email, user_role=user.role, details=f"Doctor code {doctor_code}")
 
@@ -457,15 +434,7 @@ def resend_doctor_signup_otp(req: DoctorResendSignupOtpRequest, db: Session = De
         otp_code=plain_otp
     )
     if not sent:
-        print(f"[Cloud Host Notice] Resend Signup OTP for {user.email}: {plain_otp}")
-        masked = mask_email(user.email)
-        return {
-            "success": True,
-            "message": f"Cloud Host Notice: Email blocked by host network. Verification code: {plain_otp}",
-            "masked_email": masked,
-            "cooldown_seconds": settings.OTP_RESEND_COOLDOWN,
-            "dev_otp": plain_otp
-        }
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unable to send verification email: {send_err}")
 
     masked = mask_email(user.email)
     return {
@@ -516,15 +485,7 @@ def forgot_password_request(req: ForgotPasswordRequest, db: Session = Depends(ge
         otp_code=plain_otp
     )
     if not sent:
-        print(f"[Cloud Host Notice] Reset OTP for {user.email}: {plain_otp}")
-        masked = mask_email(user.email)
-        return {
-            "success": True,
-            "message": f"Cloud Host Notice: Email blocked by host network. Verification code: {plain_otp}",
-            "masked_email": masked,
-            "cooldown_seconds": settings.OTP_RESEND_COOLDOWN,
-            "dev_otp": plain_otp
-        }
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unable to send reset email: {send_err}")
 
     masked = mask_email(user.email)
     return {

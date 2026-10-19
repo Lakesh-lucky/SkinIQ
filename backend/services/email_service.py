@@ -106,7 +106,7 @@ def send_email(
         return False, f"Invalid recipient email address: '{clean_to}'."
 
     # Priority 1: If RESEND_API_KEY is configured, send via HTTPS (Port 443) - 100% reliable on Render
-    resend_key = os.getenv("RESEND_API_KEY", "").strip()
+    resend_key = (os.getenv("RESEND_API_KEY") or getattr(settings, "RESEND_API_KEY", "")).strip()
     if resend_key:
         return send_via_resend(resend_key, clean_to, subject, body_text, body_html)
 

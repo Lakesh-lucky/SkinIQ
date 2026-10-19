@@ -8,14 +8,61 @@ from email import encoders
 from typing import Optional, Tuple
 from backend.config import settings
 
+import json
+import urllib.request
+import urllib.error
+
 def is_smtp_configured() -> bool:
     """
-    Checks if SMTP host and credentials are meaningfully configured in the environment.
+    Checks if SMTP host and credentials or Resend API key are configured.
     """
+    if os.getenv("RESEND_API_KEY", "").strip():
+        return True
     host = (settings.SMTP_HOST or "").strip()
     username = (settings.SMTP_USERNAME or "").strip()
     password = (settings.SMTP_PASSWORD or "").strip()
     return bool(host and username and password)
+
+def send_via_resend(
+    api_key: str,
+    to_email: str,
+    subject: str,
+    body_text: str,
+    body_html: Optional[str] = None
+) -> Tuple[bool, str]:
+    """
+    Dispatches a real email through Resend's HTTPS REST API (Port 443).
+    Bypasses all cloud firewall port blocks (Render Free Tier, etc.).
+    """
+    try:
+        url = "https://api.resend.com/emails"
+        from_name = settings.SMTP_FROM_NAME or "SkinIQ Medical AI"
+        payload = {
+            "from": f"{from_name} <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": subject,
+            "text": body_text,
+            "html": body_html or body_text
+        }
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data_bytes,
+            headers={
+                "Authorization": f"Bearer {api_key.strip()}",
+                "Content-Type": "application/json",
+                "User-Agent": "SkinIQ-Cloud/1.0"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return True, f"Real email dispatched via Resend HTTPS to {to_email} (ID: {data.get('id', '')})"
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="ignore")
+        return False, f"Resend API error ({e.code}): {err_body}"
+    except Exception as e:
+        return False, f"Resend dispatch error: {str(e)}"
 
 def send_email(
     to_email: str,
@@ -26,15 +73,21 @@ def send_email(
     attachment_filename: Optional[str] = None
 ) -> Tuple[bool, str]:
     """
-    Dispatches a real email through Gmail SMTP with STARTTLS.
+    Dispatches a real email through Resend HTTPS (Port 443) or Gmail SMTP (Port 587).
     Returns (True, "Success message") or (False, "Failure explanation").
     """
-    if not is_smtp_configured():
-        return False, "Email service is not configured. Please configure your Gmail address and 16-character Google App Password in the backend .env file."
-
     clean_to = (to_email or "").strip()
     if not clean_to or "@" not in clean_to:
         return False, f"Invalid recipient email address: '{clean_to}'."
+
+    # Priority 1: If RESEND_API_KEY is configured, send via HTTPS (Port 443) - 100% reliable on Render
+    resend_key = os.getenv("RESEND_API_KEY", "").strip()
+    if resend_key:
+        return send_via_resend(resend_key, clean_to, subject, body_text, body_html)
+
+    # Priority 2: Fallback to Gmail SMTP
+    if not is_smtp_configured():
+        return False, "Email service is not configured. Please configure your Gmail address and 16-character Google App Password in .env or provide RESEND_API_KEY."
 
     host = settings.SMTP_HOST or "smtp.gmail.com"
     port = settings.SMTP_PORT or 587

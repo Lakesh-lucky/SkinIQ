@@ -64,6 +64,8 @@ class Settings:
         or "reddyrajesh91960@gmail.com"
     ).strip()
     SMTP_FROM_NAME: str = (os.getenv("SMTP_FROM_NAME") or os.getenv("EMAIL_FROM_NAME") or "SkinIQ").strip()
+    # Resend HTTPS API Key (Port 443)
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "").strip()
     
     # Storage & Uploads
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")

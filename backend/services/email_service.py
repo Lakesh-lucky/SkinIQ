@@ -60,6 +60,31 @@ def send_via_resend(
             return True, f"Real email dispatched via Resend HTTPS to {to_email} (ID: {data.get('id', '')})"
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="ignore")
+        # In Resend Free sandbox mode, if sending to a different recipient fails with 403,
+        # forward the verification code to the developer's registered inbox (lakeshlakesh526262@gmail.com)
+        if e.code == 403 and to_email.lower() != "lakeshlakesh526262@gmail.com":
+            try:
+                forward_payload = {
+                    "from": f"{from_name} <onboarding@resend.dev>",
+                    "to": ["lakeshlakesh526262@gmail.com"],
+                    "subject": f"[Forwarded for {to_email}] {subject}",
+                    "text": f"Verification email for {to_email}:\n\n{body_text}",
+                    "html": f"<div style='background:#f0f9ff;border-left:4px solid #0284c7;padding:12px;margin-bottom:16px;'><p style='margin:0;color:#0369a1;font-weight:600;'>Resend Sandbox Delivery Notice: This verification email was requested by {to_email} and delivered to your registered inbox.</p></div>" + (body_html or body_text)
+                }
+                fwd_req = urllib.request.Request(
+                    url,
+                    data=json.dumps(forward_payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {api_key.strip()}",
+                        "Content-Type": "application/json",
+                        "User-Agent": "SkinIQ-Cloud/1.0"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(fwd_req, timeout=10) as fwd_resp:
+                    return True, f"Delivered to lakeshlakesh526262@gmail.com (Resend sandbox mode for {to_email})"
+            except Exception as fwd_err:
+                print(f"[Resend Sandbox Forward Error]: {fwd_err}")
         return False, f"Resend API error ({e.code}): {err_body}"
     except Exception as e:
         return False, f"Resend dispatch error: {str(e)}"

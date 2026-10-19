@@ -47,21 +47,21 @@ class Settings:
         or os.getenv("EMAIL_USERNAME") 
         or os.getenv("GMAIL_USER") 
         or os.getenv("GMAIL_ADDRESS") 
-        or ""
+        or "reddyrajesh91960@gmail.com"
     ).strip()
     # Read Google App Password and strip spaces if user copied in 4-character chunks (e.g. 'abcd efgh ijkl mnop')
     _raw_smtp_pw: str = (
         os.getenv("SMTP_PASSWORD") 
         or os.getenv("EMAIL_PASSWORD") 
         or os.getenv("GMAIL_APP_PASSWORD") 
-        or ""
+        or "ltgrssdiklmioeas"
     ).strip()
     SMTP_PASSWORD: str = _raw_smtp_pw.replace(" ", "") if " " in _raw_smtp_pw else _raw_smtp_pw
     SMTP_FROM_EMAIL: str = (
         os.getenv("SMTP_FROM_EMAIL") 
         or os.getenv("EMAIL_FROM") 
         or SMTP_USERNAME 
-        or "notifications@dermaclass.med"
+        or "reddyrajesh91960@gmail.com"
     ).strip()
     SMTP_FROM_NAME: str = (os.getenv("SMTP_FROM_NAME") or os.getenv("EMAIL_FROM_NAME") or "SkinIQ").strip()
     

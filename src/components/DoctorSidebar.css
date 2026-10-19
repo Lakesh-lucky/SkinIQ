@@ -1,0 +1,989 @@
+/* =========================================================
+   SkinIQ — Smarter Skin Insights
+   Sidebar Design System
+   Brand Palette:
+   - Primary Blue: #1e40af
+   - Indigo: #4f46e5
+   - Cyan Accent: #06b6d4
+   - Dark Surface: #111C2E
+   - Text Primary: #0F172A
+   - Text Muted: #64748B
+   ========================================================= */
+
+/* Root Layout Container */
+.chatgpt-app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------
+   SIDEBAR COMPONENT
+   --------------------------------------------------------- */
+.chatgpt-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  left: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  z-index: 100;
+  transition: width 0.22s cubic-bezier(0.2, 0, 0, 1), transform 0.22s cubic-bezier(0.2, 0, 0, 1);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Expanded state on desktop */
+.chatgpt-sidebar.expanded {
+  width: 260px;
+}
+
+/* Collapsed compact icon rail on desktop */
+.chatgpt-sidebar.collapsed {
+  width: 68px;
+}
+
+/* ---------------------------------------------------------
+   1. TOP SECTION (Brand Logo Toggle & Primary Action)
+   --------------------------------------------------------- */
+.sidebar-top-section {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px 10px;
+  gap: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* Unified Brand Logo & Sidebar Toggle Button */
+.sidebar-brand-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: left;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.sidebar-brand-toggle:hover {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.sidebar-brand-toggle:focus-visible {
+  outline: 2px solid #0FAE9B;
+  outline-offset: 1px;
+}
+
+.sidebar-brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1e40af 0%, #4f46e5 50%, #06b6d4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(30, 64, 175, 0.3);
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.15;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-brand-name span {
+  color: #06b6d4;
+}
+
+.sidebar-brand-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-brand-chevron {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, color 0.15s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-brand-toggle:hover .sidebar-brand-chevron {
+  color: #0FAE9B;
+  transform: translateX(-2px);
+}
+
+/* Collapsed state for brand button in icon rail */
+.chatgpt-sidebar.collapsed .sidebar-brand-toggle {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.chatgpt-sidebar.collapsed .sidebar-brand-toggle:hover {
+  background-color: #f1f5f9;
+}
+
+/* Clinician Profile Card inside Top Section */
+.sidebar-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sidebar-profile-card:hover {
+  border-color: #cbd5e1;
+  background-color: #f1f5f9;
+}
+
+.sidebar-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-profile-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.sidebar-profile-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-code {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #0d9488;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatgpt-sidebar.collapsed .sidebar-profile-card {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* "+ New Analysis" Primary Action Button */
+.sidebar-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+  position: relative;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.sidebar-new-btn:hover {
+  background-color: #f8fafc;
+  border-color: #0FAE9B;
+  color: #0FAE9B;
+  box-shadow: 0 2px 8px rgba(15, 174, 155, 0.15);
+  transform: translateY(-1px);
+}
+
+.sidebar-new-btn:active {
+  transform: translateY(0);
+}
+
+.sidebar-new-btn.active {
+  background-color: #ecfdf5;
+  border-color: #0FAE9B;
+  color: #0FAE9B;
+}
+
+.sidebar-new-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0FAE9B;
+  flex-shrink: 0;
+}
+
+.sidebar-new-btn.compact {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.sidebar-shortcut-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+/* ---------------------------------------------------------
+   2. MIDDLE SECTION (Navigation & Real History)
+   --------------------------------------------------------- */
+.sidebar-middle-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 8px;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.sidebar-middle-section::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-middle-section::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.sidebar-middle-section::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Section Title */
+.sidebar-group-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-group-title .view-all-link {
+  font-size: 0.68rem;
+  color: #0FAE9B;
+  cursor: pointer;
+  text-transform: none;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.sidebar-group-title .view-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Navigation List */
+.sidebar-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+/* Individual Navigation Button */
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: left;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.sidebar-nav-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.sidebar-nav-item:focus-visible {
+  outline: 2px solid #0FAE9B;
+  outline-offset: 1px;
+}
+
+/* Active State */
+.sidebar-nav-item.active {
+  background-color: #f0fdf9;
+  color: #0d9488;
+  font-weight: 700;
+}
+
+.sidebar-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background-color: #0FAE9B;
+}
+
+.sidebar-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.sidebar-nav-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badge for unread counts */
+.sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background-color: #e2e8f0;
+  color: #475569;
+  line-height: 1.3;
+}
+
+.sidebar-nav-item.active .sidebar-badge {
+  background-color: #0FAE9B;
+  color: #ffffff;
+}
+
+/* Collapsed rail specific styles */
+.chatgpt-sidebar.collapsed .sidebar-nav-item {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.chatgpt-sidebar.collapsed .sidebar-nav-item.active::before {
+  display: none;
+}
+
+/* Dot indicator in collapsed rail for notifications */
+.sidebar-collapsed-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  border: 1.5px solid #ffffff;
+}
+
+/* ---------------------------------------------------------
+   RECENT SCANS / REAL HISTORY LIST
+   --------------------------------------------------------- */
+.sidebar-recent-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.sidebar-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 0.79rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-recent-item:hover {
+  background-color: #f1f5f9;
+  color: #0FAE9B;
+}
+
+.sidebar-recent-item.active {
+  background-color: #f0fdf9;
+  color: #0d9488;
+  font-weight: 600;
+}
+
+.sidebar-recent-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.sidebar-recent-item:hover .sidebar-recent-icon {
+  color: #0FAE9B;
+}
+
+.sidebar-recent-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-recent-arrow {
+  color: #94a3b8;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sidebar-recent-item:hover .sidebar-recent-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.sidebar-empty-state {
+  padding: 10px 12px;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  text-align: left;
+}
+
+/* ---------------------------------------------------------
+   3. BOTTOM SECTION (Dedicated Full-Width Sign Out)
+   --------------------------------------------------------- */
+.sidebar-bottom-section {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px;
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  flex-shrink: 0;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Dedicated Full-Width Sign Out Button */
+.sidebar-signout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar-signout-btn:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+  border-color: #fee2e2;
+}
+
+.sidebar-signout-btn:hover .sidebar-signout-icon {
+  color: #ef4444;
+}
+
+.sidebar-signout-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.sidebar-signout-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Collapsed state for bottom section */
+.chatgpt-sidebar.collapsed .sidebar-bottom-section {
+  padding: 10px 8px;
+  align-items: center;
+}
+
+.chatgpt-sidebar.collapsed .sidebar-signout-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Clinical Accreditation Footer pill */
+.sidebar-clinic-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.2;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+.clinic-status-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------
+   FLOATING TOOLTIPS (FOR COLLAPSED RAIL)
+   --------------------------------------------------------- */
+.sidebar-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  background-color: #0B1220;
+  border: 1px solid #2A384D;
+  color: #F3F7FC;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 14px rgba(11, 18, 32, 0.4);
+}
+
+.sidebar-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: transparent #0B1220 transparent transparent;
+}
+
+.chatgpt-sidebar.collapsed *:hover > .sidebar-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ---------------------------------------------------------
+   MAIN CONTENT & HEADER WRAPPER
+   --------------------------------------------------------- */
+.chatgpt-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  position: relative;
+  background-color: #f8fafc;
+  overflow-x: hidden;
+}
+
+/* Sticky Top Header */
+.chatgpt-top-header {
+  position: sticky;
+  top: 0;
+  height: 60px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 90;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+/* Header Left: Clean Breadcrumb & Mobile Toggle */
+.top-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Mobile Brand Toggle (visible only on mobile) */
+.mobile-brand-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.mobile-brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0FAE9B 0%, #12B8E8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.header-breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #64748b;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s ease;
+}
+
+.header-breadcrumb-link:hover {
+  color: #0FAE9B;
+}
+
+.header-breadcrumb-separator {
+  color: #cbd5e1;
+}
+
+.header-breadcrumb-current {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Header Center: Patient Search */
+.top-header-search {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+}
+
+.search-input-box {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.84rem;
+  background-color: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.search-input-box:focus {
+  background-color: #ffffff;
+  border-color: #0FAE9B;
+  box-shadow: 0 0 0 3px rgba(15, 174, 155, 0.12);
+}
+
+.search-input-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Header Right: Notifications & Profile Pill */
+.top-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Notifications Button */
+.header-notif-btn {
+  position: relative;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-notif-btn:hover {
+  background-color: #ffffff;
+  border-color: #0FAE9B;
+  color: #0FAE9B;
+}
+
+.notif-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* Doctor Quick Status Pill in Header - constrained to prevent overflow */
+.header-doctor-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  max-width: 220px;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-doctor-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #0FAE9B 0%, #12B8E8 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+/* Main Content Area */
+.chatgpt-main-content {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------
+   MOBILE & TABLET DRAWER OVERLAY (< 1024px)
+   --------------------------------------------------------- */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(11, 18, 32, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 950;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  .mobile-brand-toggle {
+    display: flex;
+  }
+
+  .header-breadcrumb {
+    display: none;
+  }
+
+  .chatgpt-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    width: 280px !important;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .chatgpt-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .chatgpt-sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+
+  .chatgpt-sidebar.collapsed.mobile-open {
+    width: 280px !important;
+    transform: translateX(0);
+  }
+
+  .chatgpt-main-content {
+    padding: 20px 16px;
+  }
+
+  .top-header-search {
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-doctor-pill .doctor-text-wrapper {
+    display: none;
+  }
+
+  .top-header-search {
+    max-width: 180px;
+  }
+}

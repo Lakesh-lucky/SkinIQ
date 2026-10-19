@@ -1,0 +1,19 @@
+{
+  "name": "SkinIQ — Smarter Skin Insights",
+  "short_name": "SkinIQ",
+  "description": "AI-Powered Dermatology Platform — Multi-Model Deep Learning with Grad-CAM Explainability for Clinical Skin-Lesion Decision Support",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050c1a",
+  "theme_color": "#1e40af",
+  "categories": ["medical", "health", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

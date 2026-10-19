@@ -1,0 +1,304 @@
+{
+  "model_name": "DermaClass-Net: Dual-Backbone Cross-Attention Evidential Network",
+  "dataset_trained_on": "ISIC 2019 + HAM10000 Full Dataset (25,331 Images)",
+  "version": "2.4.0-production-real",
+  "official_summary": {
+    "overall_accuracy": 0.7077,
+    "overall_accuracy_percentage": "70.77%",
+    "macro_roc_auc": 0.9016,
+    "macro_roc_auc_percentage": "90.16%",
+    "macro_specificity": 0.9447,
+    "macro_specificity_percentage": "94.47%",
+    "macro_sensitivity": 0.4404,
+    "macro_sensitivity_percentage": "44.04%",
+    "macro_f1_score": 0.4816,
+    "melanoma_recall": 0.533,
+    "melanoma_recall_percentage": "53.30%"
+  },
+  "classes": [
+    "MEL",
+    "NV",
+    "BCC",
+    "AK",
+    "BKL",
+    "DF",
+    "VASC",
+    "SCC"
+  ],
+  "per_class_metrics": {
+    "MEL": {
+      "precision": 0.629,
+      "recall_sensitivity": 0.533,
+      "f1_score": 0.577,
+      "specificity": 0.932,
+      "roc_auc": 0.854
+    },
+    "NV": {
+      "precision": 0.795,
+      "recall_sensitivity": 0.913,
+      "f1_score": 0.85,
+      "specificity": 0.757,
+      "roc_auc": 0.921
+    },
+    "BCC": {
+      "precision": 0.619,
+      "recall_sensitivity": 0.677,
+      "f1_score": 0.647,
+      "specificity": 0.937,
+      "roc_auc": 0.932
+    },
+    "AK": {
+      "precision": 0.476,
+      "recall_sensitivity": 0.347,
+      "f1_score": 0.401,
+      "specificity": 0.987,
+      "roc_auc": 0.925
+    },
+    "BKL": {
+      "precision": 0.481,
+      "recall_sensitivity": 0.368,
+      "f1_score": 0.417,
+      "specificity": 0.954,
+      "roc_auc": 0.858
+    },
+    "DF": {
+      "precision": 0.308,
+      "recall_sensitivity": 0.083,
+      "f1_score": 0.131,
+      "specificity": 0.998,
+      "roc_auc": 0.856
+    },
+    "VASC": {
+      "precision": 0.875,
+      "recall_sensitivity": 0.412,
+      "f1_score": 0.56,
+      "specificity": 0.999,
+      "roc_auc": 0.963
+    },
+    "SCC": {
+      "precision": 0.462,
+      "recall_sensitivity": 0.19,
+      "f1_score": 0.27,
+      "specificity": 0.994,
+      "roc_auc": 0.906
+    }
+  },
+  "confusion_matrix_8x8": {
+    "labels": [
+      "MEL",
+      "NV",
+      "BCC",
+      "AK",
+      "BKL",
+      "DF",
+      "VASC",
+      "SCC"
+    ],
+    "matrix": [
+      [
+        482,
+        304,
+        49,
+        10,
+        55,
+        1,
+        1,
+        2
+      ],
+      [
+        105,
+        2352,
+        58,
+        2,
+        53,
+        4,
+        1,
+        0
+      ],
+      [
+        44,
+        96,
+        450,
+        18,
+        44,
+        0,
+        1,
+        12
+      ],
+      [
+        13,
+        11,
+        50,
+        60,
+        35,
+        0,
+        0,
+        4
+      ],
+      [
+        97,
+        141,
+        65,
+        22,
+        193,
+        1,
+        0,
+        6
+      ],
+      [
+        1,
+        28,
+        7,
+        2,
+        2,
+        4,
+        0,
+        4
+      ],
+      [
+        2,
+        21,
+        3,
+        0,
+        3,
+        1,
+        21,
+        0
+      ],
+      [
+        22,
+        5,
+        45,
+        12,
+        16,
+        2,
+        0,
+        24
+      ]
+    ],
+    "total_test_samples": 5067,
+    "correct_test_samples": 3586
+  },
+  "training_epochs": [
+    {
+      "epoch": 1,
+      "train_loss": 0.9573,
+      "val_loss": 0.9052,
+      "val_accuracy": 50.82,
+      "val_roc_auc": 0.6318,
+      "lr": "0.002473"
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.8783,
+      "val_loss": 0.8509,
+      "val_accuracy": 55.56,
+      "val_roc_auc": 0.6746,
+      "lr": "0.002392"
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.8175,
+      "val_loss": 0.7953,
+      "val_accuracy": 64.24,
+      "val_roc_auc": 0.7612,
+      "lr": "0.002262"
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.7751,
+      "val_loss": 0.7746,
+      "val_accuracy": 66.86,
+      "val_roc_auc": 0.8144,
+      "lr": "0.002088"
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.7516,
+      "val_loss": 0.751,
+      "val_accuracy": 68.42,
+      "val_roc_auc": 0.8168,
+      "lr": "0.001878"
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.7372,
+      "val_loss": 0.7438,
+      "val_accuracy": 68.94,
+      "val_roc_auc": 0.8096,
+      "lr": "0.001640"
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.723,
+      "val_loss": 0.7436,
+      "val_accuracy": 69.02,
+      "val_roc_auc": 0.8318,
+      "lr": "0.001385"
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.7148,
+      "val_loss": 0.7397,
+      "val_accuracy": 69.19,
+      "val_roc_auc": 0.8361,
+      "lr": "0.001125"
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.7055,
+      "val_loss": 0.7272,
+      "val_accuracy": 69.27,
+      "val_roc_auc": 0.8542,
+      "lr": "0.000870"
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.6884,
+      "val_loss": 0.7034,
+      "val_accuracy": 70.44,
+      "val_roc_auc": 0.8902,
+      "lr": "0.000633"
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.6648,
+      "val_loss": 0.6862,
+      "val_accuracy": 69.94,
+      "val_roc_auc": 0.8995,
+      "lr": "0.000422"
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.6421,
+      "val_loss": 0.6698,
+      "val_accuracy": 70.65,
+      "val_roc_auc": 0.9015,
+      "lr": "0.000248"
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.6235,
+      "val_loss": 0.6603,
+      "val_accuracy": 70.81,
+      "val_roc_auc": 0.9022,
+      "lr": "0.000118"
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.6144,
+      "val_loss": 0.6546,
+      "val_accuracy": 70.81,
+      "val_roc_auc": 0.902,
+      "lr": "0.000037"
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.6067,
+      "val_loss": 0.6552,
+      "val_accuracy": 70.77,
+      "val_roc_auc": 0.9016,
+      "lr": "0.000010"
+    }
+  ]
+}

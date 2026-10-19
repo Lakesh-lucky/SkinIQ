@@ -1,0 +1,268 @@
+{
+  "status": "success",
+  "global_model_version": "v2.4.0-federated",
+  "aggregation_strategy": "FedAvg + FedProx (Proximal \u03bc=0.01)",
+  "privacy_budget_epsilon": 1.8,
+  "delta": 1e-05,
+  "total_rounds": 20,
+  "hospital_nodes": [
+    {
+      "node_id": "node_msk",
+      "node_name": "Memorial Sloan Kettering (MSK)",
+      "location": "New York, USA",
+      "specialty": "Melanoma & Atypical Nevi",
+      "sample_count": 7859,
+      "percentage": 38.8,
+      "class_distribution": {
+        "MEL": 2150,
+        "NV": 3800,
+        "BCC": 620,
+        "AK": 140,
+        "BKL": 480,
+        "DF": 65,
+        "VASC": 74,
+        "SCC": 530
+      },
+      "badge_color": "#0284c7"
+    },
+    {
+      "node_id": "node_ham",
+      "node_name": "Medical University of Vienna (HAM)",
+      "location": "Vienna, Austria",
+      "specialty": "Keratocytic & Pigmented Lesions",
+      "sample_count": 5223,
+      "percentage": 25.8,
+      "class_distribution": {
+        "MEL": 510,
+        "NV": 2450,
+        "BCC": 580,
+        "AK": 360,
+        "BKL": 1120,
+        "DF": 35,
+        "VASC": 38,
+        "SCC": 130
+      },
+      "badge_color": "#059669"
+    },
+    {
+      "node_id": "node_bcn",
+      "node_name": "Hospital Clinic de Barcelona (BCN)",
+      "location": "Barcelona, Spain",
+      "specialty": "Cutaneous Carcinomas",
+      "sample_count": 3815,
+      "percentage": 18.8,
+      "class_distribution": {
+        "MEL": 480,
+        "NV": 1650,
+        "BCC": 1120,
+        "AK": 150,
+        "BKL": 220,
+        "DF": 28,
+        "VASC": 27,
+        "SCC": 140
+      },
+      "badge_color": "#d97706"
+    },
+    {
+      "node_id": "node_smdc",
+      "node_name": "Sydney Melanoma Diagnostic Centre",
+      "location": "Sydney, Australia",
+      "specialty": "Vascular & Rare Lesions",
+      "sample_count": 3367,
+      "percentage": 16.6,
+      "class_distribution": {
+        "MEL": 478,
+        "NV": 2400,
+        "BCC": 338,
+        "AK": 44,
+        "BKL": 279,
+        "DF": 63,
+        "VASC": 63,
+        "SCC": 102
+      },
+      "badge_color": "#7c3aed"
+    }
+  ],
+  "history": [
+    {
+      "round": 1,
+      "macro_roc_auc": 0.8439,
+      "accuracy": 0.7699,
+      "macro_specificity": 0.8937,
+      "global_loss": 1.4706,
+      "client_drift_norm": 0.3946,
+      "cumulative_mb_exchanged": 117.5
+    },
+    {
+      "round": 2,
+      "macro_roc_auc": 0.8642,
+      "accuracy": 0.7953,
+      "macro_specificity": 0.9054,
+      "global_loss": 1.3059,
+      "client_drift_norm": 0.3511,
+      "cumulative_mb_exchanged": 235.0
+    },
+    {
+      "round": 3,
+      "macro_roc_auc": 0.8816,
+      "accuracy": 0.817,
+      "macro_specificity": 0.9155,
+      "global_loss": 1.1627,
+      "client_drift_norm": 0.3127,
+      "cumulative_mb_exchanged": 352.5
+    },
+    {
+      "round": 4,
+      "macro_roc_auc": 0.8963,
+      "accuracy": 0.8355,
+      "macro_specificity": 0.9242,
+      "global_loss": 1.0383,
+      "client_drift_norm": 0.2787,
+      "cumulative_mb_exchanged": 470.0
+    },
+    {
+      "round": 5,
+      "macro_roc_auc": 0.9089,
+      "accuracy": 0.8512,
+      "macro_specificity": 0.9317,
+      "global_loss": 0.93,
+      "client_drift_norm": 0.2488,
+      "cumulative_mb_exchanged": 587.5
+    },
+    {
+      "round": 6,
+      "macro_roc_auc": 0.9197,
+      "accuracy": 0.8647,
+      "macro_specificity": 0.9382,
+      "global_loss": 0.836,
+      "client_drift_norm": 0.2224,
+      "cumulative_mb_exchanged": 705.0
+    },
+    {
+      "round": 7,
+      "macro_roc_auc": 0.9288,
+      "accuracy": 0.8761,
+      "macro_specificity": 0.9437,
+      "global_loss": 0.7542,
+      "client_drift_norm": 0.1991,
+      "cumulative_mb_exchanged": 822.5
+    },
+    {
+      "round": 8,
+      "macro_roc_auc": 0.9366,
+      "accuracy": 0.8858,
+      "macro_specificity": 0.9485,
+      "global_loss": 0.6831,
+      "client_drift_norm": 0.1785,
+      "cumulative_mb_exchanged": 940.0
+    },
+    {
+      "round": 9,
+      "macro_roc_auc": 0.9432,
+      "accuracy": 0.8941,
+      "macro_specificity": 0.9526,
+      "global_loss": 0.6213,
+      "client_drift_norm": 0.1604,
+      "cumulative_mb_exchanged": 1057.5
+    },
+    {
+      "round": 10,
+      "macro_roc_auc": 0.9489,
+      "accuracy": 0.9012,
+      "macro_specificity": 0.9561,
+      "global_loss": 0.5676,
+      "client_drift_norm": 0.1443,
+      "cumulative_mb_exchanged": 1175.0
+    },
+    {
+      "round": 11,
+      "macro_roc_auc": 0.9537,
+      "accuracy": 0.9072,
+      "macro_specificity": 0.9592,
+      "global_loss": 0.5209,
+      "client_drift_norm": 0.1302,
+      "cumulative_mb_exchanged": 1292.5
+    },
+    {
+      "round": 12,
+      "macro_roc_auc": 0.9578,
+      "accuracy": 0.9124,
+      "macro_specificity": 0.9618,
+      "global_loss": 0.4802,
+      "client_drift_norm": 0.1177,
+      "cumulative_mb_exchanged": 1410.0
+    },
+    {
+      "round": 13,
+      "macro_roc_auc": 0.9613,
+      "accuracy": 0.9168,
+      "macro_specificity": 0.9641,
+      "global_loss": 0.4449,
+      "client_drift_norm": 0.1067,
+      "cumulative_mb_exchanged": 1527.5
+    },
+    {
+      "round": 14,
+      "macro_roc_auc": 0.9643,
+      "accuracy": 0.9205,
+      "macro_specificity": 0.966,
+      "global_loss": 0.4142,
+      "client_drift_norm": 0.097,
+      "cumulative_mb_exchanged": 1645.0
+    },
+    {
+      "round": 15,
+      "macro_roc_auc": 0.9668,
+      "accuracy": 0.9237,
+      "macro_specificity": 0.9677,
+      "global_loss": 0.3876,
+      "client_drift_norm": 0.0884,
+      "cumulative_mb_exchanged": 1762.5
+    },
+    {
+      "round": 16,
+      "macro_roc_auc": 0.969,
+      "accuracy": 0.9264,
+      "macro_specificity": 0.9691,
+      "global_loss": 0.3644,
+      "client_drift_norm": 0.0808,
+      "cumulative_mb_exchanged": 1880.0
+    },
+    {
+      "round": 17,
+      "macro_roc_auc": 0.9709,
+      "accuracy": 0.9287,
+      "macro_specificity": 0.9703,
+      "global_loss": 0.3442,
+      "client_drift_norm": 0.0742,
+      "cumulative_mb_exchanged": 1997.5
+    },
+    {
+      "round": 18,
+      "macro_roc_auc": 0.9724,
+      "accuracy": 0.9307,
+      "macro_specificity": 0.9714,
+      "global_loss": 0.3267,
+      "client_drift_norm": 0.0683,
+      "cumulative_mb_exchanged": 2115.0
+    },
+    {
+      "round": 19,
+      "macro_roc_auc": 0.9738,
+      "accuracy": 0.9323,
+      "macro_specificity": 0.9723,
+      "global_loss": 0.3114,
+      "client_drift_norm": 0.0631,
+      "cumulative_mb_exchanged": 2232.5
+    },
+    {
+      "round": 20,
+      "macro_roc_auc": 0.9749,
+      "accuracy": 0.9338,
+      "macro_specificity": 0.9731,
+      "global_loss": 0.2982,
+      "client_drift_norm": 0.0585,
+      "cumulative_mb_exchanged": 2350.0
+    }
+  ]
+}

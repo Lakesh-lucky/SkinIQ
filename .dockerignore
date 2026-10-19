@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.vscode
+.idea
+database.sqlite
+__pycache__
+*.pyc
+uploads/*
+generated_reports/*
+.env
+.env.*

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>SkinIQ — Smarter Skin Insights | AI-Powered Dermatology Platform</title>
+    <meta name="description" content="SkinIQ is an advanced AI-powered dermatology clinical decision-support platform. Multi-model deep learning with Grad-CAM explainability for dermoscopic skin-lesion analysis — empowering dermatologists with smarter, transparent AI insights." />
+    <meta name="keywords" content="SkinIQ, skin lesion analysis, AI dermatology, dermoscopy, skin cancer detection, Grad-CAM, explainable AI, clinical decision support" />
+    <meta name="author" content="SkinIQ" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="SkinIQ — Smarter Skin Insights" />
+    <meta property="og:description" content="AI-powered dermatology analysis with multi-model deep learning and Grad-CAM explainability. Decision support for clinicians." />
+    <meta property="og:type" content="website" />
+
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SkinIQ" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Google Fonts: Plus Jakarta Sans, Outfit, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Automatically purge old service workers and cache storage from previous sessions
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            registrations[i].unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var i = 0; i < names.length; i++) {
+            caches.delete(names[i]);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -14,9 +14,11 @@ import urllib.error
 
 def is_smtp_configured() -> bool:
     """
-    Checks if SMTP host and credentials or Resend API key are configured.
+    Checks if SMTP host and credentials, HTTPS email relay, or Resend API key are configured.
     """
     if os.getenv("RESEND_API_KEY", "").strip():
+        return True
+    if (getattr(settings, "EMAIL_RELAY_URL", "") or "").strip():
         return True
     host = (settings.SMTP_HOST or "").strip()
     username = (settings.SMTP_USERNAME or "").strip()
@@ -32,14 +34,15 @@ def send_via_resend(
 ) -> Tuple[bool, str]:
     """
     Dispatches a real email through Resend's HTTPS REST API (Port 443).
-    Bypasses all cloud firewall port blocks (Render Free Tier, etc.).
+    Strictly sends ONLY to the requested recipient. Never redirects or forwards.
     """
+    clean_to = to_email.strip()
     try:
         url = "https://api.resend.com/emails"
-        from_name = settings.SMTP_FROM_NAME or "SkinIQ Medical AI"
+        from_name = settings.SMTP_FROM_NAME or "SkinIQ"
         payload = {
             "from": f"{from_name} <onboarding@resend.dev>",
-            "to": [to_email],
+            "to": [clean_to],
             "subject": subject,
             "text": body_text,
             "html": body_html or body_text
@@ -57,37 +60,141 @@ def send_via_resend(
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            return True, f"Real email dispatched via Resend HTTPS to {to_email} (ID: {data.get('id', '')})"
+            return True, f"Real email dispatched via Resend HTTPS to {clean_to} (ID: {data.get('id', '')})"
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="ignore")
-        # In Resend Free sandbox mode, if sending to a different recipient fails with 403,
-        # forward the verification code to the developer's registered inbox (lakeshlakesh526262@gmail.com)
-        if e.code == 403 and to_email.lower() != "lakeshlakesh526262@gmail.com":
-            try:
-                forward_payload = {
-                    "from": f"{from_name} <onboarding@resend.dev>",
-                    "to": ["lakeshlakesh526262@gmail.com"],
-                    "subject": f"[Forwarded for {to_email}] {subject}",
-                    "text": f"Verification email for {to_email}:\n\n{body_text}",
-                    "html": f"<div style='background:#f0f9ff;border-left:4px solid #0284c7;padding:12px;margin-bottom:16px;'><p style='margin:0;color:#0369a1;font-weight:600;'>Resend Sandbox Delivery Notice: This verification email was requested by {to_email} and delivered to your registered inbox.</p></div>" + (body_html or body_text)
-                }
-                fwd_req = urllib.request.Request(
-                    url,
-                    data=json.dumps(forward_payload).encode("utf-8"),
-                    headers={
-                        "Authorization": f"Bearer {api_key.strip()}",
-                        "Content-Type": "application/json",
-                        "User-Agent": "SkinIQ-Cloud/1.0"
-                    },
-                    method="POST"
-                )
-                with urllib.request.urlopen(fwd_req, timeout=10) as fwd_resp:
-                    return True, f"Delivered to lakeshlakesh526262@gmail.com (Resend sandbox mode for {to_email})"
-            except Exception as fwd_err:
-                print(f"[Resend Sandbox Forward Error]: {fwd_err}")
         return False, f"Resend API error ({e.code}): {err_body}"
     except Exception as e:
         return False, f"Resend dispatch error: {str(e)}"
+
+def send_via_relay(
+    relay_url: str,
+    to_email: str,
+    subject: str,
+    body_text: str,
+    body_html: Optional[str] = None
+) -> Tuple[bool, str]:
+    """
+    Dispatches email via HTTPS (Port 443) through our secure Vercel Serverless Function relay.
+    Bypasses cloud provider SMTP port firewalls (Render Free Tier) using the user's Google App Password.
+    Strictly sends ONLY to the requested recipient.
+    """
+    clean_to = to_email.strip()
+    try:
+        payload = {
+            "to": clean_to,
+            "subject": subject,
+            "text": body_text,
+            "html": body_html or body_text,
+            "secret": getattr(settings, "EMAIL_RELAY_SECRET", "")
+        }
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            relay_url.strip(),
+            data=data_bytes,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "SkinIQ-Relay/1.0"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data.get("success"):
+                return True, f"Email dispatched successfully via HTTPS relay to {clean_to}"
+            return False, data.get("error", "Email relay dispatch failed")
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="ignore")
+        return False, f"Email relay HTTP error ({e.code}): {err_body}"
+    except Exception as e:
+        return False, f"Email relay network error: {str(e)}"
+
+def send_via_smtp_direct(
+    to_email: str,
+    subject: str,
+    body_text: str,
+    body_html: Optional[str] = None,
+    attachment_path: Optional[str] = None,
+    attachment_filename: Optional[str] = None
+) -> Tuple[bool, str]:
+    """
+    Direct Gmail SMTP delivery with STARTTLS on Port 587 and SSL fallback on Port 465.
+    Strictly delivers to the dynamically provided to_email.
+    """
+    clean_to = to_email.strip()
+    host = settings.SMTP_HOST or "smtp.gmail.com"
+    configured_port = settings.SMTP_PORT or 587
+    username = settings.SMTP_USERNAME
+    password = settings.SMTP_PASSWORD
+    from_email = settings.SMTP_FROM_EMAIL or username
+    from_name = settings.SMTP_FROM_NAME or "SkinIQ"
+
+    clean_user = username.strip()
+    clean_pw = (password or "").replace(" ", "").strip()
+
+    # Build MIME message
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"{from_name} <{from_email}>"
+    msg["To"] = clean_to
+
+    part_text = MIMEText(body_text, "plain", "utf-8")
+    msg.attach(part_text)
+
+    if body_html:
+        part_html = MIMEText(body_html, "html", "utf-8")
+        msg.attach(part_html)
+
+    if attachment_path and os.path.exists(attachment_path):
+        filename = attachment_filename or os.path.basename(attachment_path)
+        with open(attachment_path, "rb") as f:
+            part_file = MIMEBase("application", "octet-stream")
+            part_file.set_payload(f.read())
+        encoders.encode_base64(part_file)
+        part_file.add_header("Content-Disposition", f'attachment; filename="{filename}"')
+        msg.attach(part_file)
+
+    ports_to_try = [configured_port]
+    if configured_port == 587:
+        ports_to_try.append(465)
+    elif configured_port == 465:
+        ports_to_try.append(587)
+
+    last_error = ""
+    for try_port in ports_to_try:
+        server = None
+        try:
+            if try_port == 465:
+                server = smtplib.SMTP_SSL(host, try_port, timeout=6)
+            else:
+                server = smtplib.SMTP(host, try_port, timeout=6)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+
+            if clean_user and clean_pw:
+                server.login(clean_user, clean_pw)
+
+            server.sendmail(from_email, [clean_to], msg.as_string())
+            return True, f"Email dispatched successfully to {clean_to} via Gmail SMTP (Port {try_port})"
+        except smtplib.SMTPAuthenticationError as e:
+            err_detail = e.smtp_error.decode("utf-8", errors="ignore") if hasattr(e, "smtp_error") and isinstance(e.smtp_error, bytes) else str(e)
+            return False, f"Gmail SMTP authentication failed. Please verify your Gmail address and 16-character Google App Password in .env. ({err_detail})"
+        except (smtplib.SMTPConnectError, socket.timeout, TimeoutError, OSError) as e:
+            last_error = str(e)
+            # Try alternate port or let relay take over
+            continue
+        except Exception as e:
+            last_error = str(e)
+            break
+        finally:
+            if server:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
+
+    return False, f"SMTP connection error ({host}): {last_error}"
 
 def send_email(
     to_email: str,
@@ -98,95 +205,57 @@ def send_email(
     attachment_filename: Optional[str] = None
 ) -> Tuple[bool, str]:
     """
-    Dispatches a real email through Resend HTTPS (Port 443) or Gmail SMTP (Port 587).
-    Returns (True, "Success message") or (False, "Failure explanation").
+    Dispatches a real verification email directly to the user's registered email address.
+    Priority Strategy:
+      1. Direct Gmail SMTP (Port 587 STARTTLS / Port 465 SSL)
+      2. HTTPS Email Relay (Port 443 via Vercel serverless function, bypassing cloud firewalls)
+      3. Resend HTTPS API (if explicitly configured)
+    Guarantees:
+      - Recipient is ALWAYS to_email (the address entered by the user).
+      - NEVER redirects, forwards, or intercepts OTP codes to any other address.
+      - Returns (True, msg) or (False, error).
     """
     clean_to = (to_email or "").strip()
     if not clean_to or "@" not in clean_to:
         return False, f"Invalid recipient email address: '{clean_to}'."
 
-    # Priority 1: If RESEND_API_KEY is configured, send via HTTPS (Port 443) - 100% reliable on Render
-    resend_key = (os.getenv("RESEND_API_KEY") or getattr(settings, "RESEND_API_KEY", "")).strip()
+    # Attempt 1: Direct Gmail SMTP
+    direct_ok, direct_msg = send_via_smtp_direct(
+        to_email=clean_to,
+        subject=subject,
+        body_text=body_text,
+        body_html=body_html,
+        attachment_path=attachment_path,
+        attachment_filename=attachment_filename
+    )
+    if direct_ok:
+        return True, direct_msg
+
+    # If SMTP failed with authentication error, report immediately (don't retry with bad credentials)
+    if "authentication failed" in direct_msg.lower():
+        return False, direct_msg
+
+    # Attempt 2: HTTPS Email Relay (Port 443 - handles Render Free Tier port blocks)
+    relay_url = (getattr(settings, "EMAIL_RELAY_URL", "") or "").strip()
+    if relay_url:
+        relay_ok, relay_msg = send_via_relay(
+            relay_url=relay_url,
+            to_email=clean_to,
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html
+        )
+        if relay_ok:
+            return True, relay_msg
+
+    # Attempt 3: Resend HTTPS API (Port 443, if configured)
+    resend_key = (os.getenv("RESEND_API_KEY") or getattr(settings, "RESEND_API_KEY", "") or "").strip()
     if resend_key:
-        return send_via_resend(resend_key, clean_to, subject, body_text, body_html)
+        resend_ok, resend_msg = send_via_resend(resend_key, clean_to, subject, body_text, body_html)
+        if resend_ok:
+            return True, resend_msg
 
-    # Priority 2: Fallback to Gmail SMTP
-    if not is_smtp_configured():
-        return False, "Email service is not configured. Please configure your Gmail address and 16-character Google App Password in .env or provide RESEND_API_KEY."
-
-    host = settings.SMTP_HOST or "smtp.gmail.com"
-    port = settings.SMTP_PORT or 587
-    username = settings.SMTP_USERNAME
-    password = settings.SMTP_PASSWORD
-    from_email = settings.SMTP_FROM_EMAIL or username
-    from_name = settings.SMTP_FROM_NAME or "DermaClass-Net"
-
-    clean_user = username.strip()
-    clean_pw = (password or "").replace(" ", "").strip()
-
-    server = None
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = f"{from_name} <{from_email}>"
-        msg["To"] = clean_to
-
-        # Attach text and HTML bodies
-        part_text = MIMEText(body_text, "plain", "utf-8")
-        msg.attach(part_text)
-
-        if body_html:
-            part_html = MIMEText(body_html, "html", "utf-8")
-            msg.attach(part_html)
-
-        # Attach optional PDF or file
-        if attachment_path and os.path.exists(attachment_path):
-            filename = attachment_filename or os.path.basename(attachment_path)
-            with open(attachment_path, "rb") as f:
-                part_file = MIMEBase("application", "octet-stream")
-                part_file.set_payload(f.read())
-            encoders.encode_base64(part_file)
-            part_file.add_header(
-                "Content-Disposition",
-                f'attachment; filename="{filename}"'
-            )
-            msg.attach(part_file)
-
-        # Connect and authenticate with STARTTLS on port 587 (or SSL on port 465)
-        if port == 465:
-            server = smtplib.SMTP_SSL(host, port, timeout=5)
-        else:
-            server = smtplib.SMTP(host, port, timeout=5)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-
-        if clean_user and clean_pw:
-            server.login(clean_user, clean_pw)
-
-        server.sendmail(from_email, [clean_to], msg.as_string())
-        return True, f"Email dispatched successfully to {clean_to}"
-    except smtplib.SMTPAuthenticationError as e:
-        err_detail = e.smtp_error.decode("utf-8", errors="ignore") if hasattr(e, "smtp_error") and isinstance(e.smtp_error, bytes) else str(e)
-        return False, f"Gmail SMTP authentication failed. Please verify your Gmail address and 16-character Google App Password in .env. ({err_detail})"
-    except smtplib.SMTPConnectError as e:
-        return False, f"Failed to connect to SMTP server ({host}:{port}): {str(e)}"
-    except smtplib.SMTPRecipientsRefused as e:
-        return False, f"Recipient email address '{clean_to}' was rejected by the SMTP server."
-    except smtplib.SMTPServerDisconnected as e:
-        return False, f"SMTP server disconnected unexpectedly (Google closed the connection). Please verify your Gmail address and 16-character Google App Password in .env: {str(e)}"
-    except socket.timeout:
-        return False, f"Connection to SMTP server ({host}:{port}) timed out."
-    except smtplib.SMTPException as e:
-        return False, f"SMTP delivery error: {str(e)}"
-    except Exception as e:
-        return False, f"Unable to send email: {str(e)}"
-    finally:
-        if server:
-            try:
-                server.quit()
-            except Exception:
-                pass
+    return False, f"Failed to dispatch verification email to {clean_to}: {direct_msg}"
 
 def build_clean_email_html(
     title: str,

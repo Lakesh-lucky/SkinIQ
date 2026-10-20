@@ -31,6 +31,8 @@ services:
         value: reddyrajesh91960@gmail.com
       - key: SMTP_FROM_NAME
         value: SkinIQ
+      - key: EMAIL_RELAY_URL
+        value: https://skin-iq.vercel.app/api/send-email
       - key: RESEND_API_KEY
         sync: false
 

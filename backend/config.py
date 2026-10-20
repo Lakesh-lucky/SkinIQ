@@ -65,12 +65,12 @@ class Settings:
         or "reddyrajesh91960@gmail.com"
     ).strip()
     SMTP_FROM_NAME: str = (os.getenv("SMTP_FROM_NAME") or os.getenv("EMAIL_FROM_NAME") or "SkinIQ").strip()
-    # Resend HTTPS API Key (Port 443)
-    _encoded_resend = "cmVfWW9jdUVLUWFfaVZIYTRubXM2UjZYZHN0WGhLOTF0OTdr"
-    RESEND_API_KEY: str = (
-        os.getenv("RESEND_API_KEY") 
-        or base64.b64decode(_encoded_resend).decode("utf-8")
-    ).strip()
+    # Optional Resend HTTPS API Key (Port 443) - only if configured by user
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "").strip()
+    
+    # HTTPS Email Relay (e.g. deployed Vercel function when raw SMTP ports are firewalled)
+    EMAIL_RELAY_URL: str = (os.getenv("EMAIL_RELAY_URL") or "https://skin-iq.vercel.app/api/send-email").strip()
+    EMAIL_RELAY_SECRET: str = (os.getenv("EMAIL_RELAY_SECRET") or os.getenv("SECRET_KEY") or "dermaclass_net_production_clinical_ai_secret_key_9482").strip()
     
     # Storage & Uploads
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")

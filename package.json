@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/three": "^0.185.4",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^1.39.0",
+    "nodemailer": "^10.1.7",
     "onnxruntime-web": "^1.30.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

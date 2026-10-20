@@ -87,12 +87,13 @@ def send_via_relay(
         target_url = "https://skin-iq-rho.vercel.app/api/send-email"
 
     try:
+        relay_secret = (getattr(settings, "EMAIL_RELAY_SECRET", "") or "dermaclass_net_production_clinical_ai_secret_key_9482").strip()
         payload = {
             "to": clean_to,
             "subject": subject,
             "text": body_text,
             "html": body_html or body_text,
-            "secret": getattr(settings, "EMAIL_RELAY_SECRET", "")
+            "secret": relay_secret
         }
         data_bytes = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
@@ -100,7 +101,9 @@ def send_via_relay(
             data=data_bytes,
             headers={
                 "Content-Type": "application/json",
-                "User-Agent": "SkinIQ-Relay/1.0"
+                "User-Agent": "SkinIQ-Relay/1.0",
+                "X-Relay-Secret": relay_secret,
+                "Authorization": f"Bearer {relay_secret}"
             },
             method="POST"
         )

@@ -70,7 +70,7 @@ class Settings:
     
     # HTTPS Email Relay (e.g. deployed Vercel function when raw SMTP ports are firewalled)
     EMAIL_RELAY_URL: str = (os.getenv("EMAIL_RELAY_URL") or "https://skin-iq-rho.vercel.app/api/send-email").strip()
-    EMAIL_RELAY_SECRET: str = (os.getenv("EMAIL_RELAY_SECRET") or os.getenv("SECRET_KEY") or "dermaclass_net_production_clinical_ai_secret_key_9482").strip()
+    EMAIL_RELAY_SECRET: str = (os.getenv("EMAIL_RELAY_SECRET") or "dermaclass_net_production_clinical_ai_secret_key_9482").strip()
     
     # Storage & Uploads
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")

@@ -11,11 +11,15 @@ ALLOWED_MIME_TYPES = {
     "image/bmp": ".bmp"
 }
 
-async def save_uploaded_scan(file: UploadFile) -> tuple[str, str, int]:
+import base64
+
+async def save_uploaded_scan(file: UploadFile) -> tuple[str, str, int, str]:
     """
-    Validates and saves an uploaded scan image to disk.
-    Returns: (saved_relative_path, original_filename, file_size_bytes)
+    Validates and saves an uploaded scan image to disk and generates a persistent base64 representation.
+    Returns: (saved_relative_path, original_filename, file_size_bytes, base64_uri)
     """
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=400,
@@ -42,4 +46,8 @@ async def save_uploaded_scan(file: UploadFile) -> tuple[str, str, int]:
     with open(target_path, "wb") as f:
         f.write(content)
 
-    return target_path, file.filename or "lesion_scan.jpg", file_size
+    # Generate persistent base64 data URI so images survive container restarts
+    b64_str = base64.b64encode(content).decode("utf-8")
+    base64_uri = f"data:{file.content_type};base64,{b64_str}"
+
+    return target_path, file.filename or "lesion_scan.jpg", file_size, base64_uri

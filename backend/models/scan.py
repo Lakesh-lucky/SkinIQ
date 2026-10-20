@@ -26,6 +26,7 @@ class Scan(Base):
     patient_id = Column(String(36), ForeignKey("patients.id"), nullable=True) # If linked to patient
     uploaded_by_user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     image_path = Column(String(500), nullable=False)
+    image_base64 = Column(Text, nullable=True)
     original_filename = Column(String(255), nullable=False)
     mime_type = Column(String(100), default="image/jpeg")
     file_size_bytes = Column(Integer, default=0)

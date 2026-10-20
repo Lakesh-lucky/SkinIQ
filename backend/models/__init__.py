@@ -11,9 +11,16 @@ from backend.models.audit import AuditLog
 
 def init_db():
     """
-    Creates all database tables in the configured database engine.
+    Creates all database tables in the configured database engine and applies safe schema migrations.
     """
     Base.metadata.create_all(bind=engine)
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE scans ADD COLUMN image_base64 TEXT"))
+            conn.commit()
+    except Exception:
+        pass
 
 __all__ = [
     "Base",

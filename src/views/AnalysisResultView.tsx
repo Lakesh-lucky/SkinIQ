@@ -23,7 +23,7 @@ import {
   Layers,
   ShieldCheck
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, resolveMediaUrl } from '../services/api';
 import { soundFx } from '../utils/audio';
 import { DoctorNavTab } from '../components/DoctorAppShell';
 
@@ -41,6 +41,7 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
   const [scanData, setScanData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Zoom and Pan Controls
   const [zoomLevel, setZoomLevel] = useState<number>(1.0);
@@ -64,6 +65,22 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
   const [shareSuccess, setShareSuccess] = useState<{ message: string; shareUrl?: string; token?: string } | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (isDownloadingPdf) return;
+    setIsDownloadingPdf(true);
+    setError(null);
+    try {
+      soundFx.playClick();
+      await api.reports.downloadPdf(scanData ? scanData.id : scanId);
+      soundFx.playSuccess();
+    } catch (err: any) {
+      soundFx.playError();
+      setError(err.message || 'Failed to download PDF report.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const fetchScan = async () => {
     setLoading(true);
@@ -220,15 +237,15 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
         </button>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <a
-            href={api.reports.getPdfUrl(scanData.id)}
-            download
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
             className="btn btn-secondary"
-            style={{ padding: '8px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+            style={{ padding: '8px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Download size={15} />
-            <span>Download PDF Report</span>
-          </a>
+            {isDownloadingPdf ? <RefreshCw size={15} className="spin" /> : <Download size={15} />}
+            <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download PDF Report'}</span>
+          </button>
 
           <button
             onClick={() => { soundFx.playClick(); setIsShareModalOpen(true); }}
@@ -317,8 +334,14 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
             }}
           >
             <img 
-              src={scanData.image_url} 
+              src={(scanData as any)?.image_base64 || resolveMediaUrl(scanData?.image_url)} 
               alt="Dermoscopy Lesion"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.includes('data:image') && (scanData as any)?.image_base64) {
+                  target.src = (scanData as any).image_base64;
+                }
+              }}
               style={{
                 maxWidth: '100%',
                 maxHeight: '100%',

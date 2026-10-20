@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Header
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.config import settings
@@ -127,13 +128,13 @@ def doctor_login_step1(req: UserLoginRequest, db: Session = Depends(get_db)):
     Never returns OTP in API response.
     """
     clean_email = req.email.strip().lower()
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
 
-    if not user or not verify_password(req.password, user.hashed_password):
-        log_audit_event(db, action="LOGIN_FAILED", user_email=clean_email, status="FAILED", details="Invalid credentials")
+    if not user:
+        log_audit_event(db, action="LOGIN_FAILED", user_email=clean_email, status="FAILED", details="No clinician account registered")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email address or password."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No clinician account is registered with this email address. Please sign up first."
         )
 
     if not user.is_active:
@@ -141,6 +142,18 @@ def doctor_login_step1(req: UserLoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This clinician account has been deactivated. Please contact support."
         )
+
+    if not verify_password(req.password, user.hashed_password):
+        log_audit_event(db, action="LOGIN_FAILED", user_email=clean_email, status="FAILED", details="Incorrect password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password. Please verify your credentials or use 'Forgot Password' to reset it."
+        )
+
+    # Normalize email in DB if casing differed
+    if user.email != clean_email:
+        user.email = clean_email
+        db.commit()
 
     # Check if SMTP is configured before attempting email delivery
     if not is_smtp_configured():
@@ -198,7 +211,7 @@ def doctor_login_step2_verify(req: DoctorLoginVerifyRequest, db: Session = Depen
     clean_email = req.email.strip().lower()
     clean_otp = req.otp.strip()
 
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Clinician account not found.")
 
@@ -209,6 +222,9 @@ def doctor_login_step2_verify(req: DoctorLoginVerifyRequest, db: Session = Depen
 
     # Mark user as verified
     user.is_verified = True
+    user.email = clean_email
+    if user.doctor_profile and user.doctor_profile.verification_status == "PENDING":
+        user.doctor_profile.verification_status = "VERIFIED"
     db.commit()
 
     token = create_access_token({"sub": user.id, "role": user.role, "email": user.email})
@@ -226,7 +242,7 @@ def doctor_login_step2_verify(req: DoctorLoginVerifyRequest, db: Session = Depen
 def resend_doctor_login_otp(req: DoctorResendOtpRequest, db: Session = Depends(get_db)):
     """Resends a new verification code to the doctor's email, enforcing 60s cooldown."""
     clean_email = req.email.strip().lower()
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Clinician account not found.")
 
@@ -271,7 +287,7 @@ def doctor_self_registration(req: DoctorRegisterRequest, db: Session = Depends(g
     Never exposes OTP in API response.
     """
     clean_email = req.email.strip().lower()
-    existing = db.query(User).filter(User.email == clean_email).first()
+    existing = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     
     if existing and existing.is_verified:
         raise HTTPException(
@@ -288,6 +304,7 @@ def doctor_self_registration(req: DoctorRegisterRequest, db: Session = Depends(g
     if existing and not existing.is_verified:
         # Re-use unverified staging user
         user = existing
+        user.email = clean_email
         user.full_name = req.full_name
         user.phone = req.phone
         user.hashed_password = hash_password(req.password)
@@ -373,7 +390,7 @@ def doctor_verify_signup(req: DoctorSignupVerifyRequest, db: Session = Depends(g
     clean_email = req.email.strip().lower()
     clean_otp = req.otp.strip()
 
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Clinician account not found.")
 
@@ -384,6 +401,7 @@ def doctor_verify_signup(req: DoctorSignupVerifyRequest, db: Session = Depends(g
 
     # Activate and mark as verified
     user.is_verified = True
+    user.email = clean_email
     if user.doctor_profile:
         user.doctor_profile.verification_status = "VERIFIED"
     db.commit()
@@ -404,7 +422,7 @@ def doctor_verify_signup(req: DoctorSignupVerifyRequest, db: Session = Depends(g
 def resend_doctor_signup_otp(req: DoctorResendSignupOtpRequest, db: Session = Depends(get_db)):
     """Resends registration verification OTP, enforcing 60s cooldown."""
     clean_email = req.email.strip().lower()
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Clinician account not found.")
 
@@ -452,7 +470,7 @@ def forgot_password_request(req: ForgotPasswordRequest, db: Session = Depends(ge
     Never exposes OTP in API response.
     """
     clean_email = req.email.strip().lower()
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
 
     if not user:
         # Prevent user enumeration with generic success message
@@ -517,7 +535,7 @@ def execute_password_reset(req: ResetPasswordRequest, db: Session = Depends(get_
     Verifies OTP and updates doctor's password in database.
     """
     clean_email = req.email.strip().lower()
-    user = db.query(User).filter(User.email == clean_email).first()
+    user = db.query(User).filter(func.lower(func.trim(User.email)) == clean_email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password reset request.")
 

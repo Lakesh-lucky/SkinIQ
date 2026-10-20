@@ -25,6 +25,7 @@ export const ReportsListView: React.FC<ReportsListViewProps> = ({ onNavigate }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Share Modal State
   const [activeShareReport, setActiveShareReport] = useState<any | null>(null);
@@ -34,6 +35,22 @@ export const ReportsListView: React.FC<ReportsListViewProps> = ({ onNavigate }) 
   const [shareSuccess, setShareSuccess] = useState<{ message: string; shareUrl?: string } | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleDownloadReport = async (scanId: string) => {
+    if (downloadingId) return;
+    setDownloadingId(scanId);
+    setError(null);
+    try {
+      soundFx.playClick();
+      await api.reports.downloadPdf(scanId);
+      soundFx.playSuccess();
+    } catch (err: any) {
+      soundFx.playError();
+      setError(err.message || 'Failed to download report PDF.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const fetchReports = async () => {
     setLoading(true);
@@ -252,16 +269,16 @@ export const ReportsListView: React.FC<ReportsListViewProps> = ({ onNavigate }) 
                             <span>View</span>
                           </button>
 
-                          <a
-                            href={r.pdf_url}
-                            download
+                          <button
+                            onClick={() => handleDownloadReport(r.scan_id)}
+                            disabled={downloadingId === r.scan_id}
                             className="btn btn-secondary"
-                            style={{ padding: '5px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                            style={{ padding: '5px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                             title="Download PDF"
                           >
-                            <Download size={13} />
+                            {downloadingId === r.scan_id ? <RefreshCw size={13} className="spin" /> : <Download size={13} />}
                             <span>PDF</span>
-                          </a>
+                          </button>
 
                           <button
                             onClick={() => { soundFx.playClick(); setActiveShareReport(r); }}

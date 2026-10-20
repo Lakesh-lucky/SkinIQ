@@ -19,7 +19,7 @@ import {
   FileCheck2,
   Shield
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, resolveMediaUrl } from '../services/api';
 import { soundFx } from '../utils/audio';
 import { DoctorNavTab } from '../components/DoctorAppShell';
 
@@ -39,6 +39,20 @@ export const PatientProfileView: React.FC<PatientProfileViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'OVERVIEW' | 'SCANS' | 'REVIEWS' | 'REPORTS' | 'APPOINTMENTS'>('OVERVIEW');
   const [copied, setCopied] = useState(false);
+  const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null);
+
+  const handleDownloadPdf = async (scanId: string) => {
+    try {
+      setDownloadingReportId(scanId);
+      soundFx.playClick();
+      await api.reports.downloadPdf(scanId);
+    } catch (err: any) {
+      console.error('PDF download error:', err);
+      alert(err.message || 'Failed to download report PDF. Please try again.');
+    } finally {
+      setDownloadingReportId(null);
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -389,9 +403,12 @@ export const PatientProfileView: React.FC<PatientProfileViewProps> = ({
                         </td>
                         <td style={{ padding: '12px 18px' }}>
                           <img 
-                            src={s.image_url} 
+                            src={s.image_base64 || resolveMediaUrl(s.image_url)} 
                             alt="Lesion" 
                             style={{ width: '44px', height: '44px', borderRadius: '6px', objectFit: 'cover' }} 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                            }}
                           />
                         </td>
                         <td style={{ padding: '12px 18px', color: '#475569' }}>
@@ -497,15 +514,20 @@ export const PatientProfileView: React.FC<PatientProfileViewProps> = ({
                       {r.date} • {r.prediction} ({r.confidence}%)
                     </div>
                   </div>
-                  <a
-                    href={r.pdf_url}
-                    download
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPdf(r.scan_id)}
+                    disabled={downloadingReportId === r.scan_id}
                     className="btn btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                    style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
                   >
-                    <Download size={14} />
-                    <span>Download PDF</span>
-                  </a>
+                    {downloadingReportId === r.scan_id ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : (
+                      <Download size={14} />
+                    )}
+                    <span>{downloadingReportId === r.scan_id ? 'Downloading...' : 'Download PDF'}</span>
+                  </button>
                 </div>
               ))}
             </div>

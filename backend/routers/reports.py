@@ -31,6 +31,7 @@ def build_report_dictionary(scan: Scan) -> dict:
         "scan_date": scan.created_at.strftime("%Y-%m-%d %H:%M UTC") if scan.created_at else "",
         "scan_date_iso": scan_date_iso,
         "image_path": scan.image_path,
+        "image_base64": scan.image_base64,
         "image_url": f"/api/v1/scans/{scan.id}/image",
         "anatomical_site": scan.anatomical_site,
         "patient_id": pat.id if pat else None,

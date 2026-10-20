@@ -8,14 +8,21 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from backend.config import settings
 
+import re
+import base64
+import io
+from PIL import Image as PILImage
+
 def generate_medical_report_pdf(report_data: dict) -> str:
     """
     Generates a professional, clinical-grade medical AI report PDF from verified database records.
     Returns: Absolute file path to the generated PDF.
     """
-    patient_code = report_data.get("patient_code", "PAT-UNASSIGNED")
+    os.makedirs(settings.REPORT_DIR, exist_ok=True)
+    raw_patient_code = str(report_data.get("patient_code", "PAT-UNASSIGNED"))
+    clean_patient_code = re.sub(r'[^a-zA-Z0-9_\-]', '_', raw_patient_code)
     scan_date = report_data.get("scan_date_iso") or datetime.utcnow().strftime("%Y-%m-%d")
-    pdf_filename = f"DERMAClass_Report_{patient_code}_{scan_date}.pdf"
+    pdf_filename = f"DERMAClass_Report_{clean_patient_code}_{scan_date}.pdf"
     pdf_path = os.path.join(settings.REPORT_DIR, pdf_filename)
 
     doc = SimpleDocTemplate(
@@ -159,10 +166,27 @@ def generate_medical_report_pdf(report_data: dict) -> str:
     image_path = report_data.get("image_path")
     if image_path and os.path.exists(image_path):
         try:
+            with PILImage.open(image_path) as test_img:
+                test_img.verify()
             img_flowable = RLImage(image_path, width=120, height=120)
         except Exception:
-            img_flowable = Paragraph("<i>Image format unavailable</i>", normal_text)
-    else:
+            img_flowable = None
+
+    if not img_flowable and report_data.get("image_base64"):
+        try:
+            raw_b64 = str(report_data["image_base64"]).split(",", 1)[-1].strip()
+            img_bytes = base64.b64decode(raw_b64)
+            with PILImage.open(io.BytesIO(img_bytes)) as pil_img:
+                # Convert RGBA/P to RGB for clean JPEG embedding
+                converted_img = pil_img.convert("RGB")
+                temp_img_name = f"tmp_pdf_img_{clean_patient_code}_{report_data.get('scan_code', 'scn')}.jpg"
+                temp_img_path = os.path.join(settings.REPORT_DIR, temp_img_name)
+                converted_img.save(temp_img_path, format="JPEG", quality=90)
+                img_flowable = RLImage(temp_img_path, width=120, height=120)
+        except Exception:
+            img_flowable = None
+
+    if not img_flowable:
         img_flowable = Paragraph("<i>Dermoscopic image on file</i>", normal_text)
 
     scan_info_data = [

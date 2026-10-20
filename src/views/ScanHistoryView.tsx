@@ -25,11 +25,28 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onNavigate }) 
   const [scans, setScans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPrediction, setSelectedPrediction] = useState('ALL');
   const [selectedReviewStatus, setSelectedReviewStatus] = useState('ALL');
+
+  const handleDownloadScanReport = async (scanId: string) => {
+    if (downloadingId) return;
+    setDownloadingId(scanId);
+    setError(null);
+    try {
+      soundFx.playClick();
+      await api.reports.downloadPdf(scanId);
+      soundFx.playSuccess();
+    } catch (err: any) {
+      soundFx.playError();
+      setError(err.message || 'Failed to download report PDF.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const fetchScans = async () => {
     setLoading(true);
@@ -289,14 +306,16 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onNavigate }) 
                           </span>
                         </td>
                         <td style={{ padding: '14px 18px' }}>
-                          <a
-                            href={api.reports.getPdfUrl(s.id)}
-                            download
+                          <button
+                            onClick={() => handleDownloadScanReport(s.id)}
+                            disabled={downloadingId === s.id}
                             className="btn btn-secondary"
-                            style={{ padding: '4px 8px', fontSize: '0.75rem', textDecoration: 'none' }}
+                            style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            title="Download PDF Report"
                           >
-                            PDF
-                          </a>
+                            {downloadingId === s.id ? <RefreshCw size={11} className="spin" /> : <Download size={11} />}
+                            <span>PDF</span>
+                          </button>
                         </td>
                         <td style={{ padding: '14px 18px' }}>
                           <button

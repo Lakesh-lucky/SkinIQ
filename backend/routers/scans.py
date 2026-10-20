@@ -88,8 +88,8 @@ async def execute_lesion_prediction(
     if chosen_mode not in ["resnet18", "dermaclass_final", "both"]:
         chosen_mode = "both"
 
-    # 1. Save uploaded file to disk
-    saved_path, orig_filename, file_size = await save_uploaded_scan(image)
+    # 1. Save uploaded file to disk & generate persistent base64 representation
+    saved_path, orig_filename, file_size, image_base64 = await save_uploaded_scan(image)
 
     # 2. Open image for gatekeeper & preprocessing
     try:
@@ -200,6 +200,7 @@ async def execute_lesion_prediction(
         patient_id=matched_patient.id if matched_patient else None,
         uploaded_by_user_id=current_user.id if current_user else None,
         image_path=saved_path,
+        image_base64=image_base64,
         original_filename=orig_filename,
         mime_type=image.content_type or "image/jpeg",
         file_size_bytes=file_size,
@@ -259,6 +260,7 @@ async def execute_lesion_prediction(
         "gatekeeper_details": details,
         "processing_time_ms": processing_time_ms,
         "image_url": f"/api/v1/scans/{new_scan.id}/image",
+        "image_base64": new_scan.image_base64,
         "created_at": new_scan.created_at.isoformat(),
         "disclaimer": "AI-generated decision support. Final diagnosis must be made by a qualified healthcare professional."
     }
@@ -292,6 +294,7 @@ def list_user_scans(
             "patient_name": s.patient.patient_name if s.patient else "Direct Scan",
             "patient_code": s.patient.patient_code if s.patient else "N/A",
             "image_url": f"/api/v1/scans/{s.id}/image",
+            "image_base64": s.image_base64,
             "original_filename": s.original_filename,
             "anatomical_site": s.anatomical_site,
             "patient_age": s.patient_age,
@@ -438,6 +441,7 @@ def get_single_scan_details(scan_id: str, db: Session = Depends(get_db)):
             "id": scan.id,
             "scan_code": scan.scan_code,
             "image_url": f"/api/v1/scans/{scan.id}/image",
+            "image_base64": scan.image_base64,
             "original_filename": scan.original_filename,
             "file_size_bytes": scan.file_size_bytes,
             "anatomical_site": scan.anatomical_site,
@@ -483,9 +487,26 @@ def get_single_scan_details(scan_id: str, db: Session = Depends(get_db)):
 @router.get("/api/v1/scans/{scan_id}/image")
 def get_scan_image(scan_id: str, db: Session = Depends(get_db)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan or not os.path.exists(scan.image_path):
+    if not scan:
+        scan = db.query(Scan).filter(Scan.scan_code == scan_id).first()
+    if not scan:
         raise HTTPException(status_code=404, detail="Scan image not found.")
-    return FileResponse(scan.image_path, media_type=scan.mime_type)
+
+    if scan.image_path and os.path.exists(scan.image_path):
+        return FileResponse(scan.image_path, media_type=scan.mime_type or "image/jpeg")
+
+    # Persistent PostgreSQL fallback for container restarts / ephemeral Render storage
+    if scan.image_base64:
+        try:
+            import base64
+            from fastapi.responses import Response
+            raw_b64 = scan.image_base64.split(",", 1)[-1]
+            img_bytes = base64.b64decode(raw_b64)
+            return Response(content=img_bytes, media_type=scan.mime_type or "image/jpeg")
+        except Exception:
+            pass
+
+    raise HTTPException(status_code=404, detail="Scan image not found on server.")
 
 
 @router.post("/api/v1/scans/{scan_id}/review")

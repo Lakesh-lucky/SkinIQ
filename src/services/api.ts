@@ -14,8 +14,22 @@ import {
 } from '../types';
 import { LESION_CLASSES } from '../data/lesionData';
 
-// In local dev, empty string uses Vite dev proxy. For production (Vercel -> Render), set VITE_API_BASE_URL
-export const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+// In local dev, empty string uses Vite dev proxy. For production (Vercel -> Render), defaults to production Render URL if unset
+const DEFAULT_RENDER_BACKEND_URL = 'https://skiniq-backend-p33p.onrender.com';
+export const BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')
+    ? DEFAULT_RENDER_BACKEND_URL
+    : '')
+).replace(/\/+$/, '');
+
+export function resolveMediaUrl(url?: string): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 function getAuthHeader(token?: string | null): Record<string, string> {
   const t = token || localStorage.getItem('dermaclass_doctor_auth_token') || localStorage.getItem('dermaclass_auth_token');
@@ -427,7 +441,57 @@ export const api = {
       return handleResponse<{ success: boolean; shared_info: any; report: MedicalReportRecord }>(res);
     },
 
-    getPdfUrl: (scanId: string) => `${BASE_URL}/api/v1/reports/${scanId}/pdf`
+    getPdfUrl: (scanId: string) => `${BASE_URL}/api/v1/reports/${scanId}/pdf`,
+
+    downloadPdf: async (scanId: string, customFilename?: string): Promise<void> => {
+      const url = `${BASE_URL}/api/v1/reports/${scanId}/pdf`;
+      const res = await fetch(url, {
+        headers: { ...getAuthHeader() }
+      });
+
+      if (!res.ok) {
+        let errorMsg = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.detail) errorMsg = errData.detail;
+        } catch {
+          // Response wasn't JSON
+        }
+        throw new Error(errorMsg);
+      }
+
+      const blob = await res.blob();
+      // If server returned text/html (like an SPA fallback), throw real error instead of corrupting file
+      if (blob.type.includes('html') || blob.type.includes('json')) {
+        const text = await blob.text();
+        let extractedMsg = 'Invalid PDF report received from server.';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.detail) extractedMsg = parsed.detail;
+        } catch {
+          // not JSON
+        }
+        throw new Error(extractedMsg);
+      }
+
+      let filename = customFilename || `DERMAClass_Report_${scanId}.pdf`;
+      const disposition = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+      if (disposition && disposition.includes('filename=')) {
+        const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+    }
   },
 
   admin: {

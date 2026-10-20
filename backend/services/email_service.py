@@ -219,7 +219,24 @@ def send_email(
     if not clean_to or "@" not in clean_to:
         return False, f"Invalid recipient email address: '{clean_to}'."
 
-    # Attempt 1: Direct Gmail SMTP
+    is_cloud_env = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"))
+    relay_url = (getattr(settings, "EMAIL_RELAY_URL", "") or "").strip()
+
+    # Strategy on Render Cloud: Render's Free Tier blocks raw outbound TCP ports 25, 465, and 587
+    # ([Errno 101] Network is unreachable). Therefore, prioritize HTTPS Email Relay (Port 443)
+    # through the Vercel serverless function which has full, unrestricted access to Google SMTP.
+    if is_cloud_env and relay_url:
+        relay_ok, relay_msg = send_via_relay(
+            relay_url=relay_url,
+            to_email=clean_to,
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html
+        )
+        if relay_ok:
+            return True, relay_msg
+
+    # Direct Gmail SMTP (Port 587 STARTTLS / Port 465 SSL)
     direct_ok, direct_msg = send_via_smtp_direct(
         to_email=clean_to,
         subject=subject,
@@ -231,13 +248,8 @@ def send_email(
     if direct_ok:
         return True, direct_msg
 
-    # If SMTP failed with authentication error, report immediately (don't retry with bad credentials)
-    if "authentication failed" in direct_msg.lower():
-        return False, direct_msg
-
-    # Attempt 2: HTTPS Email Relay (Port 443 - handles Render Free Tier port blocks)
-    relay_url = (getattr(settings, "EMAIL_RELAY_URL", "") or "").strip()
-    if relay_url:
+    # If direct SMTP failed with network/unreachable error, and relay hasn't been tried yet, try relay now
+    if not is_cloud_env and relay_url:
         relay_ok, relay_msg = send_via_relay(
             relay_url=relay_url,
             to_email=clean_to,
@@ -248,7 +260,7 @@ def send_email(
         if relay_ok:
             return True, relay_msg
 
-    # Attempt 3: Resend HTTPS API (Port 443, if configured)
+    # Resend HTTPS API (Port 443, if configured)
     resend_key = (os.getenv("RESEND_API_KEY") or getattr(settings, "RESEND_API_KEY", "") or "").strip()
     if resend_key:
         resend_ok, resend_msg = send_via_resend(resend_key, clean_to, subject, body_text, body_html)

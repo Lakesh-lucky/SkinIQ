@@ -80,6 +80,12 @@ def send_via_relay(
     Strictly sends ONLY to the requested recipient.
     """
     clean_to = to_email.strip()
+    target_url = relay_url.strip()
+    if "skin-iq.vercel.app" in target_url:
+        target_url = target_url.replace("skin-iq.vercel.app", "skin-iq-rho.vercel.app")
+    if not target_url.startswith("http"):
+        target_url = "https://skin-iq-rho.vercel.app/api/send-email"
+
     try:
         payload = {
             "to": clean_to,
@@ -90,7 +96,7 @@ def send_via_relay(
         }
         data_bytes = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
-            relay_url.strip(),
+            target_url,
             data=data_bytes,
             headers={
                 "Content-Type": "application/json",
@@ -219,13 +225,16 @@ def send_email(
     if not clean_to or "@" not in clean_to:
         return False, f"Invalid recipient email address: '{clean_to}'."
 
-    is_cloud_env = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"))
-    relay_url = (getattr(settings, "EMAIL_RELAY_URL", "") or "").strip()
+    # Priority 1: Vercel Serverless HTTPS Relay (Port 443)
+    # Render's free tier host network firewall drops raw outbound TCP traffic to ports 25, 465, and 587
+    # ([Errno 101] Network is unreachable). The Vercel relay function runs on unrestricted serverless infrastructure
+    # and delivers the email directly to Google SMTP using the authenticated Google App Password.
+    relay_url = (getattr(settings, "EMAIL_RELAY_URL", "") or "https://skin-iq-rho.vercel.app/api/send-email").strip()
+    if "skin-iq.vercel.app" in relay_url:
+        relay_url = relay_url.replace("skin-iq.vercel.app", "skin-iq-rho.vercel.app")
 
-    # Strategy on Render Cloud: Render's Free Tier blocks raw outbound TCP ports 25, 465, and 587
-    # ([Errno 101] Network is unreachable). Therefore, prioritize HTTPS Email Relay (Port 443)
-    # through the Vercel serverless function which has full, unrestricted access to Google SMTP.
-    if is_cloud_env and relay_url:
+    relay_err = None
+    if relay_url:
         relay_ok, relay_msg = send_via_relay(
             relay_url=relay_url,
             to_email=clean_to,
@@ -235,8 +244,10 @@ def send_email(
         )
         if relay_ok:
             return True, relay_msg
+        relay_err = relay_msg
 
-    # Direct Gmail SMTP (Port 587 STARTTLS / Port 465 SSL)
+    # Priority 2: Direct Gmail SMTP (Port 587 STARTTLS / Port 465 SSL)
+    # Used when running locally or on self-hosted instances with open SMTP ports
     direct_ok, direct_msg = send_via_smtp_direct(
         to_email=clean_to,
         subject=subject,
@@ -248,26 +259,15 @@ def send_email(
     if direct_ok:
         return True, direct_msg
 
-    # If direct SMTP failed with network/unreachable error, and relay hasn't been tried yet, try relay now
-    if not is_cloud_env and relay_url:
-        relay_ok, relay_msg = send_via_relay(
-            relay_url=relay_url,
-            to_email=clean_to,
-            subject=subject,
-            body_text=body_text,
-            body_html=body_html
-        )
-        if relay_ok:
-            return True, relay_msg
-
-    # Resend HTTPS API (Port 443, if configured)
+    # Priority 3: Resend HTTPS API (Port 443, if configured)
     resend_key = (os.getenv("RESEND_API_KEY") or getattr(settings, "RESEND_API_KEY", "") or "").strip()
     if resend_key:
         resend_ok, resend_msg = send_via_resend(resend_key, clean_to, subject, body_text, body_html)
         if resend_ok:
             return True, resend_msg
 
-    return False, f"Failed to dispatch verification email to {clean_to}: {direct_msg}"
+    failure_msg = relay_err or direct_msg
+    return False, f"Failed to dispatch verification email to {clean_to}: {failure_msg}"
 
 def build_clean_email_html(
     title: str,
